@@ -10,7 +10,7 @@ import model as m
 app = FastAPI()
 
 @app.post("/image")
-async def process(data:dict):
+async def process(data:dict = Body(...)):
     try:
         image_data = data["image"]
         ksize = data['ksize']
