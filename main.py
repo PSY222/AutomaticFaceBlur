@@ -26,7 +26,7 @@ async def process(data:dict = Body(...)):
             return {'error':"There are no faces detected"}
 
         pil_img = Image.open("saved.jpg").convert('RGB')
-        temp = np.asarray("saved.jpg")
+        temp = np.asarray(pil_img)
         landmarks = m.get_landmarks(temp, rects)
         routes = m.get_faceline(landmarks)
         output = m.blur_img(routes,temp,ksize,sigmaval)
