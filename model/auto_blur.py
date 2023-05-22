@@ -1,15 +1,23 @@
+import cv2
+import dlib
+import argparse
 import numpy as np
 import pandas as pd
-import cv2
 from PIL import Image
 from retinaface import RetinaFace
-import dlib
+
 
 predictor = dlib.shape_predictor("model/shape_predictor_68_face_landmarks.dat")
 
 def get_rects(image_path):
   faces = RetinaFace.detect_faces(image_path)
-  rects = [faces[f"face_{i+1}"]['facial_area'] for i in range(len(faces))]
+  if isinstance(faces, tuple):
+    rects = None
+  elif len(faces) != 0 and faces is not None:
+    rects = [face_data["facial_area"] for face_data in faces.values()]
+  else:
+    rects = None
+
   return rects
   
 def get_landmarks(image, rects):
@@ -55,14 +63,13 @@ def get_faceline(landmarks):
         faces = []
     return routes
 
-
-def blur_paste(routes, img): #,blur_size=25
-    mask = np.zeros_like(img)  # Create a mask with the same size as the image
+def blur_paste(routes, img): 
+    mask = np.zeros_like(img)  
     for landmarks in routes:
         mask = cv2.fillConvexPoly(mask, np.array(landmarks), (255, 255, 255))
 
-    mask = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)  # Convert mask to grayscale
-    blurred_region = cv2.blur(img,(25,25))
+    mask = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)  
+    blurred_region = cv2.GaussianBlur(img, (51,51), 21) #Adjust the parameter to control the blur
 
     result_img = cv2.bitwise_and(img, cv2.bitwise_not(mask))
     result_img = cv2.bitwise_or(result_img, cv2.bitwise_and(blurred_region, mask))
@@ -78,10 +85,15 @@ def blur_img(input_data):
         pil_img = Image.fromarray(input_data).convert('RGB')
 
     arr_img = np.asarray(pil_img)
+    if not rects:
+      return arr_img
+      
     landmarks = get_landmarks(arr_img, rects)
     routes = get_faceline(landmarks)
     output = blur_paste(routes, arr_img)
     return output
+
+
 
 def blur_video(path, output_path):
     capture = cv2.VideoCapture(path)
@@ -90,30 +102,22 @@ def blur_video(path, output_path):
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         output = cv2.VideoWriter(output_path, fourcc,
                                  20.0, (int(capture.get(3)), int(capture.get(4))))
-        
+
     frame_counter = 0
+    total_frames = capture.get(cv2.CAP_PROP_FRAME_COUNT)
 
     while True:
         _, frame = capture.read()
         frame_counter += 1
-        print(frame_counter)
 
         if frame is None:
             print("frame is none")
             break
 
-        # key = cv2.waitKey(1)
-        # if key & 0xFF == ord('q'):
-        #     break
-        print("after break")
+        # Perform frame processing here
         frame = blur_img(frame)
 
-        # show image
-        # cv2.imshow('blurred', frame)
-
         if output_path:
-          output.write(frame)
-          print('Blurred video has been saved successfully at',
-                  output_path, 'path')
-
-    # cv2.destroyAllWindows()
+            output.write(frame)
+    print('Blurred video has been saved successfully at', output_path, 'path')
+            
