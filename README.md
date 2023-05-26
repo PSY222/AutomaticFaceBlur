@@ -8,8 +8,8 @@ My face blur tool finds faces in an _accurate and fast_ way using pretrained Ret
 
 ### Here are some examples: <br>
 <div style="display: flex; justify-content: center;">
-  <img src="output/after1.jpg" width="500" height="400" style="margin-right: 10px;">
-  <img src="output/after2.jpg" width="500" height="400" style="margin-right: 10px;">
+  <img src="output/after1.jpg" width="400" height="350" style="margin-right: 10px;">
+  <img src="output/after2.jpg" width="400" height="350" style="margin-right: 10px;">
 </div>
 
 https://github.com/PSY222/AutomaticFaceBlur/assets/86555104/bc94bc5f-dffc-4217-818a-25344181cac4
