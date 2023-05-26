@@ -70,7 +70,7 @@ def blur_paste(routes, img):
     for landmarks in routes:
         mask = cv2.fillConvexPoly(mask, np.array(landmarks), (255, 255, 255))
 
-    mask = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)  # Convert mask to grayscale
+    mask = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB) 
     blurred_region = cv2.GaussianBlur(img, (51,51), 21)
 
     result_img = cv2.bitwise_and(img, cv2.bitwise_not(mask))
