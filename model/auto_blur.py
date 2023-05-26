@@ -1,5 +1,6 @@
 import cv2
 import dlib
+import os
 import argparse
 import numpy as np
 import pandas as pd
@@ -63,20 +64,21 @@ def get_faceline(landmarks):
         faces = []
     return routes
 
+
 def blur_paste(routes, img): 
-    mask = np.zeros_like(img)  
+    mask = np.zeros_like(img)  # Create a mask with the same size as the image
     for landmarks in routes:
         mask = cv2.fillConvexPoly(mask, np.array(landmarks), (255, 255, 255))
 
-    mask = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)  
-    blurred_region = cv2.GaussianBlur(img, (51,51), 21) #Adjust the parameter to control the blur
+    mask = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)  # Convert mask to grayscale
+    blurred_region = cv2.GaussianBlur(img, (51,51), 21)
 
     result_img = cv2.bitwise_and(img, cv2.bitwise_not(mask))
     result_img = cv2.bitwise_or(result_img, cv2.bitwise_and(blurred_region, mask))
 
     return result_img
 
-def blur_img(input_data):
+def blur_img(input_data,output_path, blur_type="video"):
     if isinstance(input_data, str):  # Check if input_data is a string (path)
         rects = get_rects(input_data)
         pil_img = Image.open(input_data).convert('RGB')
@@ -91,9 +93,13 @@ def blur_img(input_data):
     landmarks = get_landmarks(arr_img, rects)
     routes = get_faceline(landmarks)
     output = blur_paste(routes, arr_img)
-    return output
 
-
+    if blur_type == 'img':
+            output_img = Image.fromarray(output)  # Convert NumPy array to PIL image
+            output_img.save(output_path) 
+            print("image saved to output_path")
+    else:
+       return output
 
 def blur_video(path, output_path):
     capture = cv2.VideoCapture(path)
@@ -115,9 +121,44 @@ def blur_video(path, output_path):
             break
 
         # Perform frame processing here
-        frame = blur_img(frame)
+        frame = blur_img(frame,output_path)
 
         if output_path:
             output.write(frame)
     print('Blurred video has been saved successfully at', output_path, 'path')
             
+parser = argparse.ArgumentParser(description="Parameters for Face Blurring")
+
+parser.add_argument('-t',
+                    '--blur_type',
+                    help="Type img or video to state your blur data type",
+                    type=str,
+                    required=True)
+
+parser.add_argument('-i',
+                      '--input_path',
+                      help="Input image/video path",
+                      type=str,
+                      required=True)
+  
+parser.add_argument('-o',
+                      '--output_path',
+                      help="Output image/video path",
+                      type=str,
+                      required=True)
+    
+args = parser.parse_args()
+
+try:
+  assert os.path.isfile(args.input_path), "Input path does not exist"
+  assert os.path.isdir(os.path.dirname(args.output_path)), 'Output path directory does not exist'
+except AssertionError as e:
+  print(str(e))
+
+if args.blur_type == "img":
+  blur_img(args.input_path, args.output_path,args.blur_type)
+elif args.blur_type =="video":
+  blur_video(args.input_path,args.output_path)
+else:
+  print("Recheck the blur_type")
+
