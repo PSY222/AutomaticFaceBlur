@@ -1,5 +1,5 @@
 # AutomaticFaceBlur 👨‍🦲
-Automatic face blur tool that **creates blur along the face line** in both photos and videos.
+Automatic face blur tool that **follows contour of the face** in both photos and videos.
 
 # "Why is every face blur using rectangular or circular shapes?"
 
